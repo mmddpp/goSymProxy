@@ -10,3 +10,11 @@ ip: listen address
 port: listen port
 root: path to cache symbol files
 timeout: connect timeout seconds
+
+## test link
+
+source link:
+<http://msdl.microsoft.com/download/symbols/wntdll.pdb/F999943DF7FB4B8EB6D99F2B047BC3101/wntdll.pdb>
+
+proxy link:
+<http://127.0.0.1/download/symbols/wntdll.pdb/F999943DF7FB4B8EB6D99F2B047BC3101/wntdll.pdb>

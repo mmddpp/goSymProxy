@@ -1,6 +1,6 @@
 {
     "ip": "0.0.0.0",
-    "port": "83",
+    "port": "80",
     "root": "./symbols",
     "timeout": 300
 }

@@ -115,7 +115,7 @@ func downloadFileByUrl(url string, filePath string) error {
 
 func securePath(dirPath string) string {
 	cleanedPath := filepath.Clean(dirPath)
-	return cleanedPath
+	return mergeSlashes(cleanedPath)
 }
 
 func mergeSlashes(input string) string {
@@ -131,14 +131,9 @@ func downloadSymbolsHandler(c fiber.Ctx) error {
 	subRUI := strings.TrimPrefix(requestURILower, cfg.Route)
 	securedSubURI := securePath(subRUI)
 
-	// URL
-	urlStr := "http://msdl.microsoft.com/download/symbols/" + securedSubURI
-	fmt.Println("GET: ", urlStr)
-
 	// File path
-	filePath := cfg.Root + "/" + securedSubURI
+	filePath := cfg.Root + securedSubURI
 	filePath = mergeSlashes(filePath)
-	fmt.Println("Path:", filePath)
 
 	// Skip too long path for safety
 	if len(filePath) > 255 {
@@ -148,6 +143,10 @@ func downloadSymbolsHandler(c fiber.Ctx) error {
 
 	// Not found, download from url
 	if !fileExist(filePath) {
+		// URL
+		urlStr := "http://msdl.microsoft.com/download/symbols/" + securedSubURI
+		fmt.Println("GET: ", urlStr)
+
 		err := downloadFileByUrl(urlStr, filePath)
 		if err != nil {
 			fmt.Println("Download failed: ", err)
@@ -162,5 +161,6 @@ func downloadSymbolsHandler(c fiber.Ctx) error {
 	}
 
 	// Found, send file to client
+	fmt.Println("Path:", filePath)
 	return c.SendFile(filePath)
 }

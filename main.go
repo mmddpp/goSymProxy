@@ -132,7 +132,7 @@ func downloadSymbolsHandler(c fiber.Ctx) error {
 	securedSubURI := securePath(subRUI)
 
 	// File path
-	filePath := cfg.Root + securedSubURI
+	filePath := cfg.Root + "/" + securedSubURI
 	filePath = mergeSlashes(filePath)
 
 	// Skip too long path for safety

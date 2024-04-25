@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -9,6 +10,7 @@ type Config struct {
 	Ip      string
 	Port    string
 	Root    string
+	Route   string
 	Timeout int
 }
 
@@ -17,7 +19,8 @@ func defaultConfig() Config {
 		Ip:      "0.0.0.0",
 		Port:    "80",
 		Root:    "./symbols",
-		Timeout: 300, // 5min
+		Route:   "/download/symbols/",
+		Timeout: 300, // Seconds
 	}
 }
 
@@ -31,6 +34,7 @@ func newConfingParser() *ConfigParser {
 func (parser *ConfigParser) loadFile(path string, c interface{}) error {
 	file, err := os.Open(path)
 	if err != nil {
+		fmt.Println("Failed to load config: ", err)
 		return err
 	}
 	defer file.Close()
@@ -38,6 +42,7 @@ func (parser *ConfigParser) loadFile(path string, c interface{}) error {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(c)
 	if err != nil {
+		fmt.Println("Failed to parse config: ", err)
 		return err
 	}
 
@@ -55,5 +60,8 @@ func LoadConfig(path string) Config {
 	// }
 
 	// c.Root = absolutePath
+
+	c.Route = mergeSlashes("/" + c.Route + "/")
+
 	return c
 }

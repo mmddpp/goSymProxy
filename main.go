@@ -25,7 +25,7 @@ func main() {
 	cfg = LoadConfig("SymProxy.json")
 	fmt.Println(cfg)
 
-	// Echo instance
+	// Fiber instance
 	app := fiber.New(fiber.Config{
 		CaseSensitive: false,
 	})
@@ -44,7 +44,9 @@ func main() {
 	}))
 
 	// Routes
-	app.Get("/download/symbols/*", downloadSymbolsHandler)
+	routeURI := cfg.Route + "*"
+	app.Get(routeURI, downloadSymbolsHandler)
+	fmt.Println("AddRoute:", routeURI)
 
 	// Start server
 	hostPort := cfg.Ip + ":" + cfg.Port
@@ -64,13 +66,6 @@ func fileExist(filePath string) bool {
 }
 
 func downloadFileByUrl(url string, filePath string) error {
-	// Prepare all dirs
-	err := os.MkdirAll(path.Dir(filePath), os.ModePerm)
-	if err != nil {
-		fmt.Println("Error creating directories: ", err)
-		return err
-	}
-
 	// Donwload symbol file
 	client := &http.Client{
 		// Timeout for poor network
@@ -79,28 +74,39 @@ func downloadFileByUrl(url string, filePath string) error {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		fmt.Println("Failed to create request: ", err)
 		return err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println("Failed to request: ", err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("MS server error: %d", resp.StatusCode)
+		return fmt.Errorf("error - symbols server status code: %d", resp.StatusCode)
+	}
+
+	// Prepare all dirs
+	err = os.MkdirAll(path.Dir(filePath), os.ModePerm)
+	if err != nil {
+		fmt.Println("Error create directories: ", err)
+		return err
 	}
 
 	// Cache symbol file
 	cacheFile, err := os.Create(filePath)
 	if err != nil {
+		fmt.Println("Error create file: ", err)
 		return err
 	}
 	defer cacheFile.Close()
 
 	_, err = io.Copy(cacheFile, resp.Body)
 	if err != nil {
+		fmt.Println("Error copy file: ", err)
 		return err
 	}
 
@@ -121,12 +127,16 @@ func mergeSlashes(input string) string {
 func downloadSymbolsHandler(c fiber.Ctx) error {
 	req := c.Request()
 
-	urlStr := "http://msdl.microsoft.com" + string(req.RequestURI())
+	requestURILower := strings.ToLower(string(req.RequestURI()))
+	subRUI := strings.TrimPrefix(requestURILower, cfg.Route)
+	securedSubURI := securePath(subRUI)
+
+	// URL
+	urlStr := "http://msdl.microsoft.com/download/symbols/" + securedSubURI
 	fmt.Println("GET: ", urlStr)
 
-	requestURILower := strings.ToLower(string(req.RequestURI()))
-	shortSubPath := strings.TrimPrefix(requestURILower, "/download/symbols")
-	filePath := cfg.Root + securePath(shortSubPath)
+	// File path
+	filePath := cfg.Root + "/" + securedSubURI
 	filePath = mergeSlashes(filePath)
 	fmt.Println("Path:", filePath)
 

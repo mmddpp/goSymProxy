@@ -9,6 +9,7 @@ You can deploy goSymProxy independently without requiring **IIS** or **SymProxy.
 ip: listen address  
 port: listen port  
 root: path to cache symbol files  
+route: proxy URI
 timeout: connect timeout seconds  
 
 ## test link
